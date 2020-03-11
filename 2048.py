@@ -49,10 +49,12 @@ class Grid():
         self.gridCord = Cord(self.index[0], self.index[1])
         self.adjacentGrid = [None for i in range(4)]
         self.containBlc = None
-        self.isMoving = False
-        #self.movingTo: Cord
+        self.isMerging = False
+        #self.isMoving = False
+        self.movingTo: Grid
     def DOT_draw(self):
-        pygame.draw.circle(self.screenSource, (255, 0, 0), self.position, 1)
+        return 0
+        #pygame.draw.circle(self.screenSource, (255, 0, 0), self.position, 1)
     def addBlc(self, imgIndex):
         self.containBlc = Blc(imgIndex,self.gridCord.CordPos)
         self.containBlc.display()
@@ -60,13 +62,15 @@ class Grid():
         if self.containBlc != None: return True
         else: return False
     def getBlc(self):
-        return self.containedBlc
-    def moveBlc(self, newPos):
-        self.containBlc.display(newPos)
+        return self.containBlc
     def initAdjacentGrid(self, direction, addedGrid):
         self.adjacentGrid[direction] = addedGrid
     def getAdjacentGrid(self, direction):
         return self.adjacentGrid[direction]
+    def setPath(self, distence, direction):
+        self.movingTo = self
+        for i in range(distence):
+            self.movingTo = self.movingTo.adjacentGrid[direction]
         
 class Blc():
     def __init__(self, imgIndex, Pos):
@@ -97,47 +101,28 @@ def initGrids(grids : list):
             if j - 1 > 0: grids[i][j].initAdjacentGrid(2, grids[i][j-1])
             if j + 1 < len(grids[i]): grids[i][j].initAdjacentGrid(3, grids[i][j+1])
 
-def doPathing(startingPoints : list, direction: int):
-    pathingProgess = 0
-    while pathingProgess < 4:
-        for i in range(4):
-            #isDone = False
-            currentGrid = startingPoints[i]
+def doPathing(gridsWithBlc: Grid[], direction: int):
+    for i in range(len(gridsWithBlc)):
+        currentGrid = gridsWithBlc[i]
+        blcRepeatCounter = 1
+        addedMove = 0
+        while currentGrid is not None:
             nextGrid = currentGrid.getAdjacentGrid(direction)
-            blcRepeatCounter = 1
-            addedMove = 0
-            if currentGrid.hasBlc == False: 
-                currentGrid = currentGrid.getAdjacentGrid(direction)
-            while nextGrid != None:
-                if nextGrid.hasBlc == False: addedMove += 1
-                elif nextGrid.getBlc == currentGrid: blcRepeatCounter += 1
-                elif nextGrid.getBlc != currentGrid.getBlc:
-                    if blcRepeatCounter > 1:
-                        addedMove = blcRepeatCounter / 2
-                        blcRepeatCounter = 1
-                currentGrid = nextGrid
+            if nextGrid.hasBlc == False: addedMove += 1
+            elif nextGrid.getBlc == currentGrid.getBlc: 
+                blcRepeatCounter += 1
+                if blcRepeatCounter == 2: currentGrid.isMerging == True
+            elif nextGrid.getBlc != currentGrid.getBlc:
+                if blcRepeatCounter > 1:
+                    addedMove = blcRepeatCounter / 2
+                    blcRepeatCounter = 1
             if blcRepeatCounter > 1:
-                        addedMove = blcRepeatCounter / 2
-                        blcRepeatCounter = 1
+                addedMove = blcRepeatCounter / 2
+                blcRepeatCounter = 1
+            currentGrid.setPath(addedMove, direction)
+            currentGrid = nextGrid
             
-
-
-"""def setBlcPath(direction):
-    loop1Start: int
-    loop1End: int
-    loop2Start: int
-    loop2End: int
-    for i in range(loop1Start, loop1End):
-        for j in range(loop2Start,loop2End):
-            countMoves = 0
-            for k in range(j + 1, loop2End):
-                if gridList[i][k].used == False: countMoves += 1
-                elif gridList[i][j].getBlc == gridList[i][k].getBlc: countMoves += 1
-                else: pass
-            if isinstance(gridList[i][j].getBlc, blcs): 
-                gridList[i][j].getBlc.addMoves(countMoves)
-            countMoves = 0         
-def blockCreate(maxInput1, numbers1, listIndex):
+"""def blockCreate(maxInput1, numbers1, listIndex):
     a = 1
     if maxInput1 < 16:
         while a == 1:
@@ -152,9 +137,9 @@ def blockCreate(maxInput1, numbers1, listIndex):
                 blockSpace[Rand].blcIndex = listIndex
                 a = 0
     if maxInput1 >= 16:
-        screen.blit(gameover, (0, 0))"""
+        screen.blit(gameover, (0, 0))
 
-"""def movingBlc(fromGrid:Grid,toGrid:Grid):
+def movingBlc(fromGrid:Grid,toGrid:Grid):
     isDone = False
     moveDest = 238
     nowPos = copy.deepcopy(toGrid.gridCord.CordPos)
