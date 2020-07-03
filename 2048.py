@@ -50,7 +50,7 @@ class Grid():
         self.adjacentGrid = [None for i in range(4)]
         self.containBlc = None
         self.isMerging = False
-        #self.isMoving = False
+        self.isMoving = False
         self.movingTo: Grid
     def DOT_draw(self):
         return 0
@@ -59,8 +59,7 @@ class Grid():
         self.containBlc = Blc(imgIndex,self.gridCord.CordPos)
         self.containBlc.display()
     def hasBlc(self):
-        if self.containBlc != None: return True
-        else: return False
+        return self.containBlc is not None
     def getBlc(self):
         return self.containBlc
     def initAdjacentGrid(self, direction, addedGrid):
@@ -68,6 +67,7 @@ class Grid():
     def getAdjacentGrid(self, direction):
         return self.adjacentGrid[direction]
     def setPath(self, distence, direction):
+        self.isMoving = True
         self.movingTo = self
         for i in range(distence):
             self.movingTo = self.movingTo.adjacentGrid[direction]
@@ -86,10 +86,12 @@ class Blc():
     def display(self):
         screen.blit(blcPic[self.imgIndex], (self.xPos, self.yPos))
         pygame.display.update()
+
 class Table():
     def __init__(self):
         self.GridList = [[Grid(i, j) for i in range(4)] for j in range(4)]
-        self.GridsWithBlc: list
+        self.GridsWithBlc = []
+        self.MovingGrid = []
     def initGrids(self):
         for i in range(len(GridList)):
             noTopGrid = False
@@ -105,17 +107,21 @@ class Table():
                     self.GridList[i][j].initAdjacentGrid(2, self.GridList[i][j-1])
                 if j + 1 < len(self.GridList[i]): 
                     self.GridList[i][j].initAdjacentGrid(3, self.GridList[i][j+1])
-    def doPathing(gridsWithBlc: list, direction: int):
-        for i in range(len(gridsWithBlc)):
-            currentGrid = gridsWithBlc[i]
+    def doPathing(self, direction: int):
+        for i in range(len(self.GridsWithBlc)):
+            currentGrid = self.GridsWithBlc[i]
             blcRepeatCounter = 1
             addedMove = 0
             while currentGrid is not None:
                 nextGrid = currentGrid.getAdjacentGrid(direction)
-                if nextGrid.hasBlc == False: addedMove += 1
+                if nextGrid is None:
+                    currentGrid = nextGrid
+                    continue
+                elif nextGrid.hasBlc == False: 
+                    addedMove += 1
                 elif nextGrid.getBlc == currentGrid.getBlc:
                     blcRepeatCounter += 1
-                    if blcRepeatCounter == 2 and currentGrid == gridsWithBlc[i]:
+                    if blcRepeatCounter == 2 and currentGrid == self.GridsWithBlc[i]:
                         currentGrid.isMerging == True
                 elif nextGrid.getBlc != currentGrid.getBlc:
                     if blcRepeatCounter > 1:
@@ -125,9 +131,12 @@ class Table():
                     addedMove = blcRepeatCounter / 2
                     blcRepeatCounter = 1
                 currentGrid = nextGrid
-                gridsWithBlc[i].setPath(addedMove, direction)
+                if addedMove > 0:
+                    
+                    self.GridsWithBlc[i].setPath(addedMove, direction)
+    def doSliding(self):
+        
 
-    
 #----------------------
 
 #----function section----
@@ -146,29 +155,6 @@ class Table():
                 grids[i][j].initAdjacentGrid(2, grids[i][j-1])
             if j + 1 < len(grids[i]): 
                 grids[i][j].initAdjacentGrid(3, grids[i][j+1])"""
-
-"""def doPathing(gridsWithBlc: list, direction: int):
-    for i in range(len(gridsWithBlc)):
-        currentGrid = gridsWithBlc[i]
-        blcRepeatCounter = 1
-        addedMove = 0
-        while currentGrid is not None:
-            nextGrid = currentGrid.getAdjacentGrid(direction)
-            if nextGrid.hasBlc == False: addedMove += 1
-            elif nextGrid.getBlc == currentGrid.getBlc:
-                blcRepeatCounter += 1
-                if blcRepeatCounter == 2 and currentGrid == gridsWithBlc[i]:
-                     currentGrid.isMerging == True
-            elif nextGrid.getBlc != currentGrid.getBlc:
-                if blcRepeatCounter > 1:
-                    addedMove = blcRepeatCounter / 2
-                    blcRepeatCounter = 1
-            if blcRepeatCounter > 1:
-                addedMove = blcRepeatCounter / 2
-                blcRepeatCounter = 1
-            currentGrid = nextGrid
-            gridsWithBlc[i].setPath(addedMove, direction)
-            """
             
 """def blockCreate(maxInput1, numbers1, listIndex):
     a = 1
